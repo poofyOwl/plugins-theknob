@@ -47,12 +47,6 @@ void TheKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     
     for (int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
             buffer.clear (i, 0, buffer.getNumSamples());
-
-//    if (*knobParameter != prevValue && (*knobParameter == 0.0 || prevValue == 0.0))
-//    {
-//        connectGraph();
-//        prevValue = *knobParameter;
-//    }
     
     mainProcessor->processBlock (buffer, midiMessages);
 }

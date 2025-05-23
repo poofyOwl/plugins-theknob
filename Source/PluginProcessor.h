@@ -12,9 +12,9 @@
 
 
 //==============================================================================
-const float KNOB_MIN_VALUE = 0.0;
+const float KNOB_MIN_VALUE = 1.0;
 const float KNOB_MAX_VALUE = 100.0;
-const float KNOB_DEFAULT_VALUE = 0.0;
+const float KNOB_DEFAULT_VALUE = 1.0;
 
 const float HPF_FREQ_MIN_VALUE = 50.0;
 const float HPF_FREQ_MAX_VALUE = 150.0;
@@ -740,27 +740,17 @@ private:
 //        {
 //            mainProcessor->removeConnection (conn);
 //        }
-//        
-//        if(*knobParameter > 0.0)
-//        {
-            // input -> filter -> EQ -> delay -> reverb -> distortion -> output
-            for (int channel = 0; channel < 2; ++channel)
-            {
-                mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { eqNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { delayNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { distortionNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
-            }
-//        }
-//        else
-//        {
-//            for (int channel = 0; channel < 2; ++channel)
-//            {
-//                mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
-//            }
-//        }
+
+        // input -> filter -> EQ -> delay -> reverb -> distortion -> output
+        for (int channel = 0; channel < 2; ++channel)
+        {
+            mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
+            mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { eqNode->nodeID, channel } });
+            mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { delayNode->nodeID, channel } });
+            mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
+            mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { distortionNode->nodeID, channel } });
+            mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+        }
     }
     
     //==============================================================================
@@ -781,7 +771,6 @@ private:
     juce::AudioProcessorValueTreeState parameters;
     
     std::atomic<float>* knobParameter  = nullptr;
-    float prevValue = 0.0;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheKnobAudioProcessor)
