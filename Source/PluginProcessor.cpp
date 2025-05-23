@@ -7,26 +7,26 @@
 */
 
 #include "PluginProcessor.h"
-//#include "PluginEditor.h"
+
 
 //==============================================================================
 TheKnobAudioProcessor::TheKnobAudioProcessor()
-    : parameters (*this, nullptr, juce::Identifier ("TheKnob"),
+    :   AudioProcessor (BusesProperties().withInput ("Input", juce::AudioChannelSet::stereo(), true).withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
+
+        mainProcessor (new juce::AudioProcessorGraph()),
+
+        parameters (*this, nullptr, juce::Identifier ("TheKnob"),
                   {
-        std::make_unique<juce::AudioParameterFloat> ("gain",            // parameterID
-                                                     "Gain",            // parameter name
-                                                     0.0f,              // minimum value
-                                                     1.0f,              // maximum value
-                                                     0.5f),             // default value
-        std::make_unique<juce::AudioParameterFloat> ("knob",            // parameterID
-                                                     "Knob",            // parameter name
-                                                     0.0f,              // minimum value
-                                                     100.0f,              // maximum value
-                                                     50.0f)              // default value
+            std::make_unique<juce::AudioParameterInt> ("knob",
+                                                       "TheKnob",
+                                                       KNOB_MIN_VALUE,
+                                                       KNOB_MAX_VALUE,
+                                                       KNOB_DEFAULT_VALUE)
               })
 {
-    gainParameter  = parameters.getRawParameterValue ("gain");
     knobParameter = parameters.getRawParameterValue("knob");
+    
+    initialiseGraph();
 }
 
 TheKnobAudioProcessor::~TheKnobAudioProcessor(){}
@@ -34,53 +34,27 @@ TheKnobAudioProcessor::~TheKnobAudioProcessor(){}
 //==============================================================================
 void TheKnobAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    previousGain = *gainParameter;
+    mainProcessor->setPlayConfigDetails (getMainBusNumInputChannels(),
+                                         getMainBusNumOutputChannels(),
+                                         sampleRate, samplesPerBlock);
+    mainProcessor->prepareToPlay (sampleRate, samplesPerBlock);
+    initialiseGraph();
 }
-
-void TheKnobAudioProcessor::releaseResources(){}
-
-#ifndef JucePlugin_PreferredChannelConfigurations
-bool TheKnobAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
-{
-  #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
-    return true;
-  #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
-        return false;
-
-    // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
-        return false;
-   #endif
-
-    return true;
-  #endif
-}
-#endif
 
 void TheKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    // First update all params based on knob value
-    *gainParameter = *knobParameter / 100;
+    juce::ScopedNoDenormals noDenormals;
     
-    // Apply smooth gain change
-    float currentGain = *gainParameter;
-    if (juce::approximatelyEqual (currentGain, previousGain))
-    {
-        buffer.applyGain (currentGain);
-    }
-    else
-    {
-        buffer.applyGainRamp (0, buffer.getNumSamples(), previousGain, currentGain);
-        previousGain = currentGain;
-    }
+    for (int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
+            buffer.clear (i, 0, buffer.getNumSamples());
+
+//    if (*knobParameter != prevValue && (*knobParameter == 0.0 || prevValue == 0.0))
+//    {
+//        connectGraph();
+//        prevValue = *knobParameter;
+//    }
+    
+    mainProcessor->processBlock (buffer, midiMessages);
 }
 
 //==============================================================================
@@ -101,11 +75,6 @@ void TheKnobAudioProcessor::setStateInformation (const void* data, int sizeInByt
             parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
         }
 }
-
-//void TheKnobAudioProcessor::knobValueChanged (float value)
-//{
-//    *gainParameter = value/100;
-//}
 
 //==============================================================================
 // This creates new instances of the plugin..
