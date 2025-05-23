@@ -520,20 +520,21 @@ public:
     
     void setParams()
     {
+        auto& delay = delayChain.template get<delayIndex>();
+        delay.setDelayTime(0, 1);
+        delay.setDelayTime(1, 1);
+        
         // wet level: 0..1
         // feedback: 0..0.49
         float wetLevel = normalizeKnobValue(*knobValue);
         float feedback = mapKnobValueToRange(*knobValue, DELAY_FEEDBACK_MIN_VALUE, DELAY_FEEDBACK_MAX_VALUE);
-        auto& delay = delayChain.template get<delayIndex>();
         delay.setWetLevel(wetLevel);
         delay.setFeedback(feedback);
-        delay.setDelayTime(0, 1);
-        delay.setDelayTime(1, 1);
         
         // filter params
         auto& hpf = delayChain.template get<hpfIndex>();
-        float hpfCutoff = mapKnobValueToRange(*knobValue, DELAY_HPF_FREQ_MIN_VALUE, DELAY_HPF_FREQ_MAX_VALUE);
         auto& lpf = delayChain.template get<lpfIndex>();
+        float hpfCutoff = mapKnobValueToRange(*knobValue, DELAY_HPF_FREQ_MIN_VALUE, DELAY_HPF_FREQ_MAX_VALUE);
         float lpfCutoff = mapKnobValueToRange(*knobValue, DELAY_LPF_FREQ_MIN_VALUE, DELAY_LPF_FREQ_MAX_VALUE);
         hpf.state = FilterCoefs::makeFirstOrderHighPass (getSampleRate(), hpfCutoff);
         lpf.state = FilterCoefs::makeFirstOrderLowPass(getSampleRate(), lpfCutoff);
