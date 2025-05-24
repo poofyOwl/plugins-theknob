@@ -15,16 +15,21 @@ TheKnobAudioProcessor::TheKnobAudioProcessor()
 
         mainProcessor (new juce::AudioProcessorGraph()),
 
-        parameters (*this, nullptr, juce::Identifier ("TheKnob"),
-                  {
+        parameters (*this, nullptr, juce::Identifier ("TheKnob"), {
             std::make_unique<juce::AudioParameterInt> ("knob",
                                                        "TheKnob",
                                                        KNOB_MIN_VALUE,
                                                        KNOB_MAX_VALUE,
-                                                       KNOB_DEFAULT_VALUE)
+                                                       KNOB_DEFAULT_VALUE),
+            std::make_unique<juce::AudioParameterInt> ("mode",
+                                                       "Mode",
+                                                       VIOLET,
+                                                       CRIMSON,
+                                                       VIOLET)
               })
 {
     knobParameter = parameters.getRawParameterValue("knob");
+    modeParameter = parameters.getRawParameterValue("mode");
     
     initialiseGraph();
 }
@@ -64,10 +69,12 @@ void TheKnobAudioProcessor::setStateInformation (const void* data, int sizeInByt
     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
 
     if (xmlState.get() != nullptr)
+    {
         if (xmlState->hasTagName (parameters.state.getType()))
         {
             parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
         }
+    }
 }
 
 //==============================================================================
