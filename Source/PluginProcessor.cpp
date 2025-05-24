@@ -53,6 +53,12 @@ void TheKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     for (int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
             buffer.clear (i, 0, buffer.getNumSamples());
     
+    if (prevMode != *modeParameter)
+    {
+        connectGraph();
+        prevMode = *modeParameter;
+    }
+    
     mainProcessor->processBlock (buffer, midiMessages);
 }
 

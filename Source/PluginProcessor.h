@@ -680,27 +680,58 @@ private:
         reverbNode = mainProcessor->addNode (std::make_unique<ReverbProcessor>(knobParameter));
         delayNode = mainProcessor->addNode (std::make_unique<DelayProcessor>(knobParameter));
         distortionNode = mainProcessor->addNode (std::make_unique<DistortionProcessor>(knobParameter));
-//        gainNode = mainProcessor->addNode (std::make_unique<GainProcessor>(gainParameter));
         
         connectGraph();
     }
     
     void connectGraph()
     {
-//        for (auto& conn : mainProcessor->getConnections())
-//        {
-//            mainProcessor->removeConnection (conn);
-//        }
-
-        // input -> filter -> EQ -> delay -> reverb -> distortion -> output
-        for (int channel = 0; channel < 2; ++channel)
+        for (auto& conn : mainProcessor->getConnections())
         {
-            mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
-            mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { eqNode->nodeID, channel } });
-            mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { delayNode->nodeID, channel } });
-            mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
-            mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { distortionNode->nodeID, channel } });
-            mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+            mainProcessor->removeConnection (conn);
+        }
+        
+        switch((int)*modeParameter)
+        {
+            case VIOLET:
+                for (int channel = 0; channel < 2; ++channel)
+                {
+                    // order: filter -> distortion -> reverb -> delay -> EQ
+                    mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { distortionNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { reverbNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { delayNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { eqNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+                }
+                break;
+                
+            case TEAL:
+                for (int channel = 0; channel < 2; ++channel)
+                {
+                    // order: filter -> EQ -> distortion -> delay -> reverb
+                    mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { eqNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { distortionNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { delayNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+                    
+                }
+                break;
+            
+            case CRIMSON:
+                for (int channel = 0; channel < 2; ++channel)
+                {
+                    // order: filter -> EQ -> delay -> reverb -> distortion
+                    mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { eqNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { delayNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { distortionNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+                }
+                break;
         }
     }
     
@@ -723,6 +754,8 @@ private:
     
     std::atomic<float>* knobParameter  = nullptr;
     std::atomic<float>* modeParameter  = nullptr;
+    
+    float prevMode;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheKnobAudioProcessor)
