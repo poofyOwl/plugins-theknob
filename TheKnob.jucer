@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="rRPcPj" name="TheKnob" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="VOU">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="VOU"
+              pluginFormats="buildAAX,buildAU,buildVST3" pluginAAXCategory="8192">
   <MAINGROUP id="VE9sdm" name="TheKnob">
     <GROUP id="{F990B754-C8B4-F029-7520-3709847F7438}" name="Source">
       <FILE id="hatAsf" name="PluginProcessor.cpp" compile="1" resource="0"
