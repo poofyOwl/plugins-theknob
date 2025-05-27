@@ -93,11 +93,12 @@ void TheKnobAudioProcessor::initialiseGraph()
     audioOutputNode = mainProcessor->addNode (std::make_unique<AudioGraphIOProcessor> (AudioGraphIOProcessor::audioOutputNode));
     
     // FX nodes & processors
-    filterNode = mainProcessor->addNode (std::make_unique<FilterProcessor>(knobParameter));
-    eqNode = mainProcessor->addNode (std::make_unique<EQProcessor>(knobParameter));
-    reverbNode = mainProcessor->addNode (std::make_unique<ReverbProcessor>(knobParameter));
-    delayNode = mainProcessor->addNode (std::make_unique<DelayProcessor>(knobParameter));
-    distortionNode = mainProcessor->addNode (std::make_unique<DistortionProcessor>(knobParameter));
+    filterNode = mainProcessor->addNode (std::make_unique<FilterProcessor>(knobParameter, modeParameter));
+    eqNode = mainProcessor->addNode (std::make_unique<EQProcessor>(knobParameter, modeParameter));
+    specialEqNode = mainProcessor->addNode (std::make_unique<SpecialEQProcessor>(knobParameter, modeParameter));
+    reverbNode = mainProcessor->addNode (std::make_unique<ReverbProcessor>(knobParameter, modeParameter));
+    delayNode = mainProcessor->addNode (std::make_unique<DelayProcessor>(knobParameter, modeParameter));
+    distortionNode = mainProcessor->addNode (std::make_unique<DistortionProcessor>(knobParameter, modeParameter));
     
     connectGraph();
 }
@@ -120,7 +121,8 @@ void TheKnobAudioProcessor::connectGraph()
                 mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { reverbNode->nodeID, channel } });
                 mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { delayNode->nodeID, channel } });
                 mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { eqNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+                mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { specialEqNode->nodeID, channel } });
+                mainProcessor->addConnection ({ { specialEqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
             }
             break;
             
@@ -133,8 +135,8 @@ void TheKnobAudioProcessor::connectGraph()
                 mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { distortionNode->nodeID, channel } });
                 mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { delayNode->nodeID, channel } });
                 mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
-                
+                mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { specialEqNode->nodeID, channel } });
+                mainProcessor->addConnection ({ { specialEqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
             }
             break;
         
@@ -147,7 +149,8 @@ void TheKnobAudioProcessor::connectGraph()
                 mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { delayNode->nodeID, channel } });
                 mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
                 mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { distortionNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+                mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { specialEqNode->nodeID, channel } });
+                mainProcessor->addConnection ({ { specialEqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
             }
             break;
     }

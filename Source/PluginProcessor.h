@@ -9,7 +9,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "RadioButtonAttachment.h"
 #include "PluginEditor.h"
 #include "FXProcessors.h"
 
@@ -85,6 +84,7 @@ private:
 
     Node::Ptr filterNode;
     Node::Ptr eqNode;
+    Node::Ptr specialEqNode;
     Node::Ptr reverbNode;
     Node::Ptr delayNode;
     Node::Ptr distortionNode;

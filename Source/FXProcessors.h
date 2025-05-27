@@ -22,13 +22,16 @@ const float HPF_FREQ_MAX_VALUE = 150.0;
 
 // EQ
 const float EQ_GAIN_MIN_VALUE = 1.0;
-const float EQ_GAIN_MAX_VALUE = 4.0;
+const float EQ_GAIN_MAX_VALUE = 3.0;
 const float EQ_Q_MIN_VALUE = 2.0;
 const float EQ_Q_MAX_VALUE = 1.0;
 
 // DELAY
+const std::array<float, 3> DELAY_TIME_L = { 0.7, 0.2, 1.0 }; // one for each mode
+const std::array<float, 3> DELAY_TIME_R = { 0.7, 0.2, 1.0 }; // one for each mode
 const float DELAY_FEEDBACK_MIN_VALUE = 0.0;
-const float DELAY_FEEDBACK_MAX_VALUE = 0.49;
+const std::array<float, 3> DELAY_FEEDBACK_MAX_VALUE = { 0.6, 0.75, 0.25 }; // one for each mode
+const std::array<float, 3> DELAY_WET_LEVEL_MAX_VALUE = { 0.6, 0.5, 1.0 }; // one for each mode
 const float DELAY_HPF_FREQ_MIN_VALUE = 200.0;
 const float DELAY_HPF_FREQ_MAX_VALUE = 400.0;
 const float DELAY_LPF_FREQ_MIN_VALUE = 10000.0;
@@ -36,10 +39,14 @@ const float DELAY_LPF_FREQ_MAX_VALUE = 3500.0;
 
 // REVERB
 const float REVERB_FREEZE_MIN_VALUE = 0.0;
-const float REVERB_FREEZE_MAX_VALUE = 0.49;
+const std::array<float, 3> REVERB_FREEZE_MAX_VALUE = { 0.35, 0.1, 0.1 }; // one for each mode
+const std::array<float, 3> REVERB_WET_LEVEL_MAX_VALUE = { 0.5, 0.8, 1.0 }; // one for each mode
+const std::array<float, 3> REVERB_ROOM_SIZE_MAX_VALUE = { 0.5, 0.75, 0.9 }; // one for each mode
+const std::array<float, 3> REVERB_WIDTH_MAX_VALUE = { 0.5, 0.75, 0.9 }; // one for each mode
 
-const float DIST_INPUT_GAIN_MIN_VALUE = 0.0;
-const float DIST_INPUT_GAIN_MAX_VALUE = 20.0;
+// DISTORTION
+const std::array<float, 3> DIST_INPUT_GAIN_MIN_VALUE = { 0.0, 0.0, 5.0 }; // one for each mode
+const std::array<float, 3> DIST_INPUT_GAIN_MAX_VALUE = { 10.0, 15.0, 10.0 }; // one for each mode
 
 //==============================================================================
 float mapKnobValueToRange(float x, float rangeStart, float rangeEnd)
@@ -57,9 +64,11 @@ class ProcessorBase : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    ProcessorBase()
+    ProcessorBase(std::atomic<float>* knobParam, std::atomic<float>* modeParam)
         : AudioProcessor (BusesProperties().withInput ("Input", juce::AudioChannelSet::stereo()).withOutput ("Output", juce::AudioChannelSet::stereo()))
     {
+        knobValue = knobParam;
+        mode = modeParam;
     }
     //==============================================================================
     void prepareToPlay (double, int) override {}
@@ -82,6 +91,9 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock&) override {}
     void setStateInformation (const void*, int) override {}
+protected:
+    std::atomic<float>* knobValue;
+    std::atomic<float>* mode;
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProcessorBase)
@@ -91,11 +103,8 @@ private:
 class FilterProcessor  : public ProcessorBase
 {
 public:
-    FilterProcessor(std::atomic<float>* knobParam)
-    {
-        knobValue = knobParam;
-    }
-
+    FilterProcessor(std::atomic<float>* knobParam, std::atomic<float>* modeParam) : ProcessorBase(knobParam, modeParam){}
+    
     void prepareToPlay (double sampleRate, int samplesPerBlock) override
     {
         setFrequency();
@@ -128,18 +137,14 @@ public:
 
 private:
     juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filter;
-    std::atomic<float>* knobValue;
 };
 
 //==============================================================================
 class EQProcessor  : public ProcessorBase
 {
 public:
-    EQProcessor(std::atomic<float>* knobParam)
-    {
-        knobValue = knobParam;
-    }
-
+    EQProcessor(std::atomic<float>* knobParam, std::atomic<float>* modeParam) : ProcessorBase(knobParam, modeParam){}
+    
     void prepareToPlay (double sampleRate, int samplesPerBlock) override
     {
         setFilterCoefs();
@@ -175,12 +180,10 @@ public:
     
     void setFilterCoefs()
     {
-        float gain = 1.0;
-        float q = 1.0;
-        
-        gain = mapKnobValueToRange(*knobValue, EQ_GAIN_MIN_VALUE, EQ_GAIN_MAX_VALUE);
-        q = mapKnobValueToRange(*knobValue, EQ_Q_MIN_VALUE, EQ_Q_MAX_VALUE);
-        
+        float knobVal = *knobValue;
+        float gain = mapKnobValueToRange(knobVal, EQ_GAIN_MIN_VALUE, EQ_GAIN_MAX_VALUE);
+        float q = mapKnobValueToRange(knobVal, EQ_Q_MIN_VALUE, EQ_Q_MAX_VALUE);
+
         // boost at 222 Hz
         *filter1.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 250, q, gain);
         // boost at 2222 Hz
@@ -196,8 +199,91 @@ private:
 //    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filter2;
     juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filter3;
     juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filter4;
+};
+
+//==============================================================================
+class SpecialEQProcessor  : public ProcessorBase
+{
+public:
+    SpecialEQProcessor(std::atomic<float>* knobParam, std::atomic<float>* modeParam) : ProcessorBase(knobParam, modeParam){}
     
-    std::atomic<float>* knobValue;
+    void prepareToPlay (double sampleRate, int samplesPerBlock) override
+    {
+        setFilterCoefs();
+        
+        juce::dsp::ProcessSpec spec { sampleRate, static_cast<juce::uint32> (samplesPerBlock), 2 };
+        filter1.prepare (spec);
+        filter2.prepare (spec);
+        filter3.prepare (spec);
+        filter4.prepare (spec);
+    }
+
+    void processBlock (juce::AudioSampleBuffer& buffer, juce::MidiBuffer&) override
+    {
+        setFilterCoefs();
+        
+        juce::dsp::AudioBlock<float> block (buffer);
+        juce::dsp::ProcessContextReplacing<float> context (block);
+        
+        switch((int)*mode)
+        {
+            case VIOLET:
+                filter1.process (context);
+                filter2.process (context);
+                break;
+                
+            case TEAL:
+                filter1.process (context);
+                filter2.process (context);
+                break;
+                
+            case CRIMSON:
+                filter1.process (context);
+                filter2.process (context);
+                filter3.process (context);
+                filter4.process (context);
+                break;
+        }
+    }
+
+    void reset() override
+    {
+        filter1.reset();
+        filter2.reset();
+        filter3.reset();
+        filter4.reset();
+    }
+
+    const juce::String getName() const override { return "Special EQ"; }
+    
+    void setFilterCoefs()
+    {
+        switch((int)*mode)
+        {
+            case VIOLET:
+                *filter1.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 400, 1, 0.5); //-3db
+                *filter2.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 10000, 0.71, 1.5); //3db
+                break;
+                
+            case TEAL:
+                *filter1.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 1000, 2.11, 1.5); //3db
+                *filter2.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 10000, 0.71, 1.5); //3db
+                break;
+                
+            case CRIMSON:
+                *filter1.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass (getSampleRate(), 111, 0.71);
+                *filter2.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass (getSampleRate(), 2500, 0.66);
+                *filter3.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 177, 0.71, 1.67); //4db
+                *filter4.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 1777, 0.71, 1.83); //5db
+                break;
+        }
+    }
+
+private:
+    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filter1;
+    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filter2;
+    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filter3;
+    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filter4;
 };
 
 //==============================================================================
@@ -205,11 +291,8 @@ class ReverbProcessor  : public ProcessorBase
 {
     // https://github.com/szkkng/simple-reverb
 public:
-    ReverbProcessor(std::atomic<float>* knobParam)
-    {
-        knobValue = knobParam;
-    }
-
+    ReverbProcessor(std::atomic<float>* knobParam, std::atomic<float>* modeParam) : ProcessorBase(knobParam, modeParam){}
+    
     void prepareToPlay (double sampleRate, int samplesPerBlock) override
     {
         setParams();
@@ -236,16 +319,18 @@ public:
     
     void setParams()
     {
-        float normVal = normalizeKnobValue(*knobValue);
+        float knobVal = *knobValue;
+        float normVal = normalizeKnobValue(knobVal);
+        int modeVal = (int)(*mode);
         
         // reverb params
         juce::dsp::Reverb::Parameters params;
-        params.roomSize = normVal;
-        params.damping = 1 - normVal;
-        params.wetLevel = normVal;
-        params.dryLevel = 1 - normVal;
-        params.width = normVal;
-        params.freezeMode = mapKnobValueToRange(*knobValue, REVERB_FREEZE_MIN_VALUE, REVERB_FREEZE_MAX_VALUE);
+        params.roomSize = mapKnobValueToRange(knobVal, 0, REVERB_ROOM_SIZE_MAX_VALUE[modeVal]);
+        params.damping = modeVal == CRIMSON ? normVal : 1 - normVal;
+        params.wetLevel = mapKnobValueToRange(knobVal, 0, REVERB_WET_LEVEL_MAX_VALUE[modeVal]);
+        params.dryLevel = 1 - params.wetLevel;
+        params.width = mapKnobValueToRange(knobVal, 0, REVERB_WIDTH_MAX_VALUE[modeVal]);
+        params.freezeMode = mapKnobValueToRange(knobVal, REVERB_FREEZE_MIN_VALUE, REVERB_FREEZE_MAX_VALUE[modeVal]);
         
         auto& reverb = reverbChain.template get<reverbIndex>();
         reverb.setParameters(params);
@@ -266,7 +351,6 @@ private:
     using Filter = juce::dsp::IIR::Filter<float>;
     using FilterCoefs = juce::dsp::IIR::Coefficients<float>;
     juce::dsp::ProcessorChain<juce::dsp::ProcessorDuplicator<Filter, FilterCoefs>, juce::dsp::ProcessorDuplicator<Filter, FilterCoefs>, juce::dsp::Reverb> reverbChain;
-    std::atomic<float>* knobValue;
 };
 
 //==============================================================================
@@ -440,12 +524,8 @@ private:
 class DelayProcessor  : public ProcessorBase
 {
 public:
-    //==============================================================================
-    DelayProcessor(std::atomic<float>* knobParam)
-    {
-        knobValue = knobParam;
-    }
-
+    DelayProcessor(std::atomic<float>* knobParam, std::atomic<float>* modeParam) : ProcessorBase(knobParam, modeParam){}
+    
     void prepareToPlay (double sampleRate, int samplesPerBlock) override
     {
         setParams();
@@ -472,22 +552,25 @@ public:
     
     void setParams()
     {
+        float knobVal = *knobValue;
+        float modeVal = (int)(*mode);
+        
         auto& delay = delayChain.template get<delayIndex>();
-        delay.setDelayTime(0, 1);
-        delay.setDelayTime(1, 1);
+        delay.setDelayTime(0, DELAY_TIME_L[modeVal]);
+        delay.setDelayTime(1, DELAY_TIME_R[modeVal]);
         
         // wet level: 0..1
         // feedback: 0..0.49
-        float wetLevel = normalizeKnobValue(*knobValue);
-        float feedback = mapKnobValueToRange(*knobValue, DELAY_FEEDBACK_MIN_VALUE, DELAY_FEEDBACK_MAX_VALUE);
+        float wetLevel = mapKnobValueToRange(knobVal, 0, DELAY_WET_LEVEL_MAX_VALUE[modeVal]);
+        float feedback = mapKnobValueToRange(knobVal, DELAY_FEEDBACK_MIN_VALUE, DELAY_FEEDBACK_MAX_VALUE[modeVal]);
         delay.setWetLevel(wetLevel);
         delay.setFeedback(feedback);
         
         // filter params
         auto& hpf = delayChain.template get<hpfIndex>();
         auto& lpf = delayChain.template get<lpfIndex>();
-        float hpfCutoff = mapKnobValueToRange(*knobValue, DELAY_HPF_FREQ_MIN_VALUE, DELAY_HPF_FREQ_MAX_VALUE);
-        float lpfCutoff = mapKnobValueToRange(*knobValue, DELAY_LPF_FREQ_MIN_VALUE, DELAY_LPF_FREQ_MAX_VALUE);
+        float hpfCutoff = mapKnobValueToRange(knobVal, DELAY_HPF_FREQ_MIN_VALUE, DELAY_HPF_FREQ_MAX_VALUE);
+        float lpfCutoff = mapKnobValueToRange(knobVal, DELAY_LPF_FREQ_MIN_VALUE, DELAY_LPF_FREQ_MAX_VALUE);
         hpf.state = FilterCoefs::makeFirstOrderHighPass (getSampleRate(), hpfCutoff);
         lpf.state = FilterCoefs::makeFirstOrderLowPass(getSampleRate(), lpfCutoff);
     }
@@ -503,26 +586,17 @@ private:
     using Filter = juce::dsp::IIR::Filter<float>;
     using FilterCoefs = juce::dsp::IIR::Coefficients<float>;
     juce::dsp::ProcessorChain<juce::dsp::ProcessorDuplicator<Filter, FilterCoefs>, juce::dsp::ProcessorDuplicator<Filter, FilterCoefs>, Delay<float>> delayChain;
-    std::atomic<float>* knobValue;
 };
 
 //==============================================================================
 class DistortionProcessor  : public ProcessorBase
 {
 public:
-    DistortionProcessor(std::atomic<float>* knobParam)
-    {
-        knobValue = knobParam;
-        
-        auto& waveshaper = distortionChain.template get<waveshaperIndex>();
-        waveshaper.functionToUse = [] (float x) {
-            return std::tanh (x); // TODO change this to something more funky?
-        };
-    }
+    DistortionProcessor(std::atomic<float>* knobParam, std::atomic<float>* modeParam) : ProcessorBase(knobParam, modeParam) {}
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override
     {
-        setInputGain();
+        setParams();
         
         juce::dsp::ProcessSpec spec { sampleRate, static_cast<juce::uint32> (samplesPerBlock), 2 };
         distortionChain.prepare (spec);
@@ -530,7 +604,7 @@ public:
 
     void processBlock (juce::AudioSampleBuffer& buffer, juce::MidiBuffer&) override
     {
-        setInputGain();
+        setParams();
         
         juce::dsp::AudioBlock<float> block (buffer);
         juce::dsp::ProcessContextReplacing<float> context (block);
@@ -544,13 +618,29 @@ public:
 
     const juce::String getName() const override { return "Distortion"; }
     
-    void setInputGain()
+    void setParams()
     {
-        float inputGain = mapKnobValueToRange(*knobValue, DIST_INPUT_GAIN_MIN_VALUE, DIST_INPUT_GAIN_MAX_VALUE);
+        int modeVal = (int)(*mode);
+        
+        float inputGain = mapKnobValueToRange(*knobValue, DIST_INPUT_GAIN_MIN_VALUE[modeVal], DIST_INPUT_GAIN_MAX_VALUE[modeVal]);
         auto& preGain = distortionChain.template get<preGainIndex>();
         preGain.setGainDecibels (inputGain);
         auto& postGain = distortionChain.template get<postGainIndex>();
         postGain.setGainDecibels (inputGain*-0.75);
+        
+        auto& waveshaper = distortionChain.template get<waveshaperIndex>();
+        switch((int)(*mode))
+        {
+            case VIOLET:
+                waveshaper.functionToUse = [] (float x) { return std::tanh(std::sin(x)); };
+                break;
+            case TEAL:
+                waveshaper.functionToUse = [] (float x) { return std::tanh(x); };
+                break;
+            case CRIMSON:
+                waveshaper.functionToUse = [] (float x) { return std::tanh(x); };
+                break;
+        }
     }
 
 private:
@@ -561,7 +651,6 @@ private:
         postGainIndex
     };
     juce::dsp::ProcessorChain<juce::dsp::Gain<float>, juce::dsp::WaveShaper<float>, juce::dsp::Gain<float>> distortionChain;
-    std::atomic<float>* knobValue;
 };
 
 #endif /* FXProcessors_h */
