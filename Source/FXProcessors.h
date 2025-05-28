@@ -10,6 +10,116 @@
 #define FXProcessors_h
 
 
+/*
+ =================================Mode/FX Descriptions=================================
+ 
+ There are 3 FX modes: Violet, Teal, and Crimson. They are each a unique combination (with a unique order) of a filter, some EQ, some reverb, some delay, and some distortion. Every mode's chain ends with some more EQ to add some extra unique flavour.
+ 
+ -The Filter is the same for all modes: it's a HPF that goes from 0 Hz to 150 Hz as the knob goes from min to max.
+ -The EQ is also the same for all modes:
+    -Boost at 250 Hz. Q goes from 2.0 to 1.0, Gain goes from 1.0 to 2.0 (0 dB to 6 dB).
+    -Boost at 16 kHz. Q goes from 2.0 to 1.0, Gain goes from 1.0 to 2.0 (0 dB to 6 dB).
+    -Reduction at 400 Hz. Q goes from 2.0 to 1.0, Gain goes from 1.0 to 0.5 (0 dB to -6 dB).
+ -The Special EQ is custom to each mode.
+ -The Reverb parameters are custom for each mode, except that for all modes there is first a first-order HPF at 300 Hz and a first-order LPF at 3500 Hz.
+ -The Delay chain is: HPF -> LPF -> Delay -> LPF
+    -HPF goes from 200 Hz to 400 Hz
+    -LPF goes from 10 kHz to 3500 Hz
+    -The Delay parameters are custom to each mode.
+    -First-order LPF at 1000 Hz
+ -The Distortion parameters are custom to each mode.
+ 
+ ---------------------------------Violet---------------------------------
+ Chain: Filter -> Distortion -> Reverb -> Delay -> EQ -> Special EQ
+ 
+ -Filter: see above
+ -Distortion:
+    -Pre Gain: 0 dB to 10 dB
+    -Post Gain: Pre Gain * -0.75
+    -Waveshaper Transfer Function: tanh(sin(x))
+ -Reverb:
+    -Common parameters: see above
+    -Custom parameters:
+        -Room Size: 0 to 0.5
+        -Damping: 1 to 0
+        -Wet Level: 0 to 0.5
+        -Dry Level: 1 - Wet Level
+        -Width: 0 to 0.5
+        -Freeze Mode: 0 to 0.35
+ -Delay:
+    -Common parameters: see above
+    -Custom parameters:
+        -Delay time L channel: 0.7
+        -Delay time R channel: 0.7
+        -Wet Level: 0 to 0.6
+        -Feedback: 0 to 0.6
+ -EQ: see above
+ -Special EQ:
+    -Reduction of -3 dB at 400 Hz with Q = 1
+    -Boost of 3 dB at 10 kHz with Q = 0.71
+ 
+ ---------------------------------Teal---------------------------------
+ Chain: Filter -> EQ -> Distortion -> Delay -> Reverb -> Special EQ
+ 
+ -Filter: see above
+ -EQ: see above
+ -Distortion:
+    -Pre Gain: 0 dB to 15 dB
+    -Post Gain: Pre Gain * -0.75
+    -Waveshaper Transfer Function: tanh(x)
+ -Delay:
+    -Common parameters: see above
+    -Custom parameters:
+        -Delay time L channel: 0.2
+        -Delay time R channel: 0.2
+        -Wet Level: 0 to 0.5
+        -Feedback: 0 to 0.75
+ -Reverb:
+    -Common parameters: see above
+    -Custom parameters:
+        -Room Size: 0 to 0.75
+        -Damping: 1 to 0
+        -Wet Level: 0 to 0.8
+        -Dry Level: 1 - Wet Level
+        -Width: 0 to 0.75
+        -Freeze Mode: 0 to 0.1
+ -Special EQ:
+    -Boost of 3 dB at 1000 Hz with Q = 2.11
+    -Boost of 3 dB at 10 kHz with Q = 0.71
+ 
+ ---------------------------------Crimson---------------------------------
+ Chain: Filter -> EQ -> Delay -> Reverb -> Distortion -> Special EQ
+ 
+ -Filter: see above
+ -EQ: see above
+ -Delay:
+    -Common parameters: see above
+    -Custom parameters:
+        -Delay time L channel: 1.0
+        -Delay time R channel: 1.0
+        -Wet Level: 0 to 1.0
+        -Feedback: 0 to 0.25
+ -Reverb:
+    -Common parameters: see above
+    -Custom parameters:
+        -Room Size: 0 to 0.9
+        -Damping: 0 to 1
+        -Wet Level: 0 to 1.0
+        -Dry Level: 1 - Wet Level
+        -Width: 0 to 0.9
+        -Freeze Mode: 0 to 0.1
+ -Distortion:
+    -Pre Gain: 5 dB to 10 dB
+    -Post Gain: Pre Gain * -0.75
+    -Waveshaper Transfer Function: tanh(x)
+ -Special EQ:
+    -HPF at 111 Hz with Q = 0.71
+    -LPF at 2500 Hz with Q = 0.66
+    -Boost of 4 dB at 177 Hz with Q = 0.71
+    -Boost of 5 dB at 1777 Hz with Q = 0.71
+ 
+ */
+
 //==============================================================================
 // KNOB
 const float KNOB_MIN_VALUE = 1.0;
@@ -29,7 +139,6 @@ const float EQ_Q_MAX_VALUE = 1.0;
 // DELAY
 const std::array<float, 3> DELAY_TIME_L = { 0.7, 0.2, 1.0 }; // one for each mode
 const std::array<float, 3> DELAY_TIME_R = { 0.7, 0.2, 1.0 }; // one for each mode
-const float DELAY_FEEDBACK_MIN_VALUE = 0.0;
 const std::array<float, 3> DELAY_FEEDBACK_MAX_VALUE = { 0.6, 0.75, 0.25 }; // one for each mode
 const std::array<float, 3> DELAY_WET_LEVEL_MAX_VALUE = { 0.6, 0.5, 1.0 }; // one for each mode
 const float DELAY_HPF_FREQ_MIN_VALUE = 200.0;
@@ -38,7 +147,6 @@ const float DELAY_LPF_FREQ_MIN_VALUE = 10000.0;
 const float DELAY_LPF_FREQ_MAX_VALUE = 3500.0;
 
 // REVERB
-const float REVERB_FREEZE_MIN_VALUE = 0.0;
 const std::array<float, 3> REVERB_FREEZE_MAX_VALUE = { 0.35, 0.1, 0.1 }; // one for each mode
 const std::array<float, 3> REVERB_WET_LEVEL_MAX_VALUE = { 0.5, 0.8, 1.0 }; // one for each mode
 const std::array<float, 3> REVERB_ROOM_SIZE_MAX_VALUE = { 0.5, 0.75, 0.9 }; // one for each mode
@@ -330,7 +438,7 @@ public:
         params.wetLevel = mapKnobValueToRange(knobVal, 0, REVERB_WET_LEVEL_MAX_VALUE[modeVal]);
         params.dryLevel = 1 - params.wetLevel;
         params.width = mapKnobValueToRange(knobVal, 0, REVERB_WIDTH_MAX_VALUE[modeVal]);
-        params.freezeMode = mapKnobValueToRange(knobVal, REVERB_FREEZE_MIN_VALUE, REVERB_FREEZE_MAX_VALUE[modeVal]);
+        params.freezeMode = mapKnobValueToRange(knobVal, 0, REVERB_FREEZE_MAX_VALUE[modeVal]);
         
         auto& reverb = reverbChain.template get<reverbIndex>();
         reverb.setParameters(params);
@@ -555,14 +663,12 @@ public:
         float knobVal = *knobValue;
         float modeVal = (int)(*mode);
         
+        // delay params
         auto& delay = delayChain.template get<delayIndex>();
         delay.setDelayTime(0, DELAY_TIME_L[modeVal]);
         delay.setDelayTime(1, DELAY_TIME_R[modeVal]);
-        
-        // wet level: 0..1
-        // feedback: 0..0.49
         float wetLevel = mapKnobValueToRange(knobVal, 0, DELAY_WET_LEVEL_MAX_VALUE[modeVal]);
-        float feedback = mapKnobValueToRange(knobVal, DELAY_FEEDBACK_MIN_VALUE, DELAY_FEEDBACK_MAX_VALUE[modeVal]);
+        float feedback = mapKnobValueToRange(knobVal, 0, DELAY_FEEDBACK_MAX_VALUE[modeVal]);
         delay.setWetLevel(wetLevel);
         delay.setFeedback(feedback);
         
