@@ -17,7 +17,7 @@ TheKnobAudioProcessor::TheKnobAudioProcessor()
 
         parameters (*this, nullptr, juce::Identifier ("TheKnob"), {
             std::make_unique<juce::AudioParameterInt> ("knob",
-                                                       "TheKnob",
+                                                       "Amount",
                                                        KNOB_MIN_VALUE,
                                                        KNOB_MAX_VALUE,
                                                        KNOB_DEFAULT_VALUE),
@@ -53,10 +53,18 @@ void TheKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     for (int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
             buffer.clear (i, 0, buffer.getNumSamples());
     
-    if (prevMode != *modeParameter)
+    int currentKnobValue = (int)*knobParameter;
+    int currentMode = (int)*modeParameter;
+    
+    if (prevKnobValue != currentKnobValue && (prevKnobValue == 0 || currentKnobValue == 0))
     {
         connectGraph();
-        prevMode = *modeParameter;
+        prevKnobValue = currentKnobValue;
+    }
+    else if (prevMode != currentMode)
+    {
+        connectGraph();
+        prevMode = currentMode;
     }
     
     mainProcessor->processBlock (buffer, midiMessages);
@@ -110,49 +118,59 @@ void TheKnobAudioProcessor::connectGraph()
         mainProcessor->removeConnection (conn);
     }
     
-    switch((int)*modeParameter)
+    if ((int)*knobParameter == 0)
     {
-        case VIOLET:
-            for (int channel = 0; channel < 2; ++channel)
-            {
-                // order: filter -> distortion -> reverb -> delay -> EQ
-                mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { distortionNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { reverbNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { delayNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { eqNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { specialEqNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { specialEqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
-            }
-            break;
-            
-        case TEAL:
-            for (int channel = 0; channel < 2; ++channel)
-            {
-                // order: filter -> EQ -> distortion -> delay -> reverb
-                mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { eqNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { distortionNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { delayNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { specialEqNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { specialEqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
-            }
-            break;
-        
-        case CRIMSON:
-            for (int channel = 0; channel < 2; ++channel)
-            {
-                // order: filter -> EQ -> delay -> reverb -> distortion
-                mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { eqNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { delayNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { distortionNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { specialEqNode->nodeID, channel } });
-                mainProcessor->addConnection ({ { specialEqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
-            }
-            break;
+        for (int channel = 0; channel < 2; ++channel)
+        {
+            mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+        }
+    }
+    else
+    {
+        switch((int)*modeParameter)
+        {
+            case VIOLET:
+                for (int channel = 0; channel < 2; ++channel)
+                {
+                    // order: filter -> distortion -> reverb -> delay -> EQ -> Special EQ
+                    mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { distortionNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { reverbNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { delayNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { eqNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { specialEqNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { specialEqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+                }
+                break;
+                
+            case TEAL:
+                for (int channel = 0; channel < 2; ++channel)
+                {
+                    // order: filter -> EQ -> distortion -> delay -> reverb -> Special EQ
+                    mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { eqNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { distortionNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { delayNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { specialEqNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { specialEqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+                }
+                break;
+                
+            case CRIMSON:
+                for (int channel = 0; channel < 2; ++channel)
+                {
+                    // order: filter -> EQ -> delay -> reverb -> distortion -> Special EQ
+                    mainProcessor->addConnection ({ { audioInputNode->nodeID, channel }, { filterNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { filterNode->nodeID, channel }, { eqNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { eqNode->nodeID, channel }, { delayNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { delayNode->nodeID, channel }, { reverbNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { reverbNode->nodeID, channel }, { distortionNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { distortionNode->nodeID, channel }, { specialEqNode->nodeID, channel } });
+                    mainProcessor->addConnection ({ { specialEqNode->nodeID, channel }, { audioOutputNode->nodeID, channel } });
+                }
+                break;
+        }
     }
 }
 

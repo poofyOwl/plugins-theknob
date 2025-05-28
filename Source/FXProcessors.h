@@ -15,16 +15,19 @@
  
  There are 3 FX modes: Violet, Teal, and Crimson. They are each a unique combination (with a unique order) of a filter, some EQ, some reverb, some delay, and some distortion. Every mode's chain ends with some more EQ to add some extra unique flavour.
  
- -The Filter is the same for all modes: HPF that goes from 50 Hz to 150 Hz.
+ -The Filter is the same for all modes: HPF that goes from 10 Hz to 150 Hz.
  -The EQ is also the same for all modes:
     -Boost at 250 Hz. Q goes from 2.0 to 1.0, Gain goes from 1.0 to 2.0 (0 dB to 6 dB).
     -Boost at 16 kHz. Q goes from 2.0 to 1.0, Gain goes from 1.0 to 2.0 (0 dB to 6 dB).
     -Reduction at 400 Hz. Q goes from 2.0 to 1.0, Gain goes from 1.0 to 0.5 (0 dB to -6 dB).
  -The Special EQ is custom to each mode.
- -The Reverb parameters are custom for each mode, except that for all modes there is first a first-order HPF at 300 Hz and a first-order LPF at 3500 Hz.
+ -The Reverb chain is: HPF -> LPF -> Delay -> Gain Reduction
+    -HPF goes from 10 Hz to 300 Hz.
+    -LPF goes from 20 kHz to 3500 Hz.
+    -Gain reduction of -6 dB.
  -The Delay chain is: HPF -> LPF -> Delay -> LPF
-    -HPF goes from 200 Hz to 400 Hz.
-    -LPF goes from 10 kHz to 3500 Hz.
+    -HPF goes from 10 Hz to 400 Hz.
+    -LPF goes from 20 kHz to 3500 Hz.
     -The Delay parameters are custom to each mode.
     -First-order LPF at 1000 Hz.
  -The Distortion parameters are custom to each mode.
@@ -55,8 +58,8 @@
         -Feedback: 0 to 0.6
  -EQ: see above
  -Special EQ:
-    -Reduction of -3 dB at 400 Hz with Q = 1
-    -Boost of 3 dB at 10 kHz with Q = 0.71
+    -Reduction at 400 Hz, Q = 1, Gain from 0 dB to -3 dB
+    -Boost at 10 kHz, Q = 0.71, Gain from 0 dB to 3 dB
  
  ---------------------------------Teal---------------------------------
  Chain: Filter -> EQ -> Distortion -> Delay -> Reverb -> Special EQ
@@ -84,8 +87,8 @@
         -Width: 0 to 0.75
         -Freeze Mode: 0 to 0.1
  -Special EQ:
-    -Boost of 3 dB at 1000 Hz with Q = 2.11
-    -Boost of 3 dB at 10 kHz with Q = 0.71
+    -Boost at 1000 Hz, Q = 2.11, Gain from 0 dB to 3 dB
+    -Boost at 10 kHz, Q = 0.71, Gain from 0 dB to 3 dB
  
  ---------------------------------Crimson---------------------------------
  Chain: Filter -> EQ -> Delay -> Reverb -> Distortion -> Special EQ
@@ -109,25 +112,25 @@
         -Width: 0 to 0.9
         -Freeze Mode: 0 to 0.1
  -Distortion:
-    -Pre Gain: 5 dB to 10 dB
+    -Pre Gain: 0 dB to 10 dB
     -Post Gain: Pre Gain * -0.75
     -Waveshaper Transfer Function: tanh(x)
  -Special EQ:
-    -HPF at 111 Hz with Q = 0.71
-    -LPF at 2500 Hz with Q = 0.66
-    -Boost of 4 dB at 177 Hz with Q = 0.71
-    -Boost of 5 dB at 1777 Hz with Q = 0.71
+    -HPF from 10 Hz to 111 Hz, Q = 0.71
+    -LPF from 20 kHz to 2500 Hz, Q = 0.66
+    -Boost at 177 Hz, Q = 0.71, Gain from 0 dB to 4 dB
+    -Boost at 1777 Hz, Q = 0.71, Gain from 0 dB to 5 dB
  
  */
 
 //==============================================================================
 // KNOB
-const float KNOB_MIN_VALUE = 1.0;
+const float KNOB_MIN_VALUE = 0.0;
 const float KNOB_MAX_VALUE = 100.0;
-const float KNOB_DEFAULT_VALUE = 1.0;
+const float KNOB_DEFAULT_VALUE = 0.0;
 
 // FILTER
-const float HPF_FREQ_MIN_VALUE = 50.0;
+const float HPF_FREQ_MIN_VALUE = 10.0;
 const float HPF_FREQ_MAX_VALUE = 150.0;
 
 // EQ
@@ -141,9 +144,9 @@ const std::array<float, 3> DELAY_TIME_L = { 0.7, 0.2, 1.0 }; // one for each mod
 const std::array<float, 3> DELAY_TIME_R = { 0.7, 0.2, 1.0 }; // one for each mode
 const std::array<float, 3> DELAY_FEEDBACK_MAX_VALUE = { 0.6, 0.75, 0.25 }; // one for each mode
 const std::array<float, 3> DELAY_WET_LEVEL_MAX_VALUE = { 0.6, 0.5, 1.0 }; // one for each mode
-const float DELAY_HPF_FREQ_MIN_VALUE = 200.0;
+const float DELAY_HPF_FREQ_MIN_VALUE = 10.0;
 const float DELAY_HPF_FREQ_MAX_VALUE = 400.0;
-const float DELAY_LPF_FREQ_MIN_VALUE = 10000.0;
+const float DELAY_LPF_FREQ_MIN_VALUE = 20000.0;
 const float DELAY_LPF_FREQ_MAX_VALUE = 3500.0;
 
 // REVERB
@@ -153,7 +156,7 @@ const std::array<float, 3> REVERB_ROOM_SIZE_MAX_VALUE = { 0.5, 0.75, 0.9 }; // o
 const std::array<float, 3> REVERB_WIDTH_MAX_VALUE = { 0.5, 0.75, 0.9 }; // one for each mode
 
 // DISTORTION
-const std::array<float, 3> DIST_INPUT_GAIN_MIN_VALUE = { 0.0, 0.0, 5.0 }; // one for each mode
+const std::array<float, 3> DIST_INPUT_GAIN_MIN_VALUE = { 0.0, 0.0, 0.0 }; // one for each mode
 const std::array<float, 3> DIST_INPUT_GAIN_MAX_VALUE = { 10.0, 15.0, 10.0 }; // one for each mode
 
 //==============================================================================
@@ -292,7 +295,7 @@ public:
         float gain = mapKnobValueToRange(knobVal, EQ_GAIN_MIN_VALUE, EQ_GAIN_MAX_VALUE);
         float q = mapKnobValueToRange(knobVal, EQ_Q_MIN_VALUE, EQ_Q_MAX_VALUE);
 
-        // boost at 222 Hz
+        // boost at 250 Hz
         *filter1.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 250, q, gain);
         // boost at 2222 Hz
 //        *filter2.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 2222, q, gain);
@@ -366,23 +369,37 @@ public:
     
     void setFilterCoefs()
     {
+        float knobVal = *knobValue;
+        float gain1;
+        float gain2;
+        float cutoff3;
+        float cutoff4;
+
         switch((int)*mode)
         {
             case VIOLET:
-                *filter1.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 400, 1, 0.5); //-3db
-                *filter2.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 10000, 0.71, 1.5); //3db
+                gain1 = mapKnobValueToRange(knobVal, EQ_GAIN_MIN_VALUE, 0.5);
+                gain2 = mapKnobValueToRange(knobVal, EQ_GAIN_MIN_VALUE, 1.5);
+                *filter1.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 400, 1, gain1); //-3db
+                *filter2.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 10000, 0.71, gain2); //3db
                 break;
                 
             case TEAL:
-                *filter1.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 1000, 2.11, 1.5); //3db
-                *filter2.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 10000, 0.71, 1.5); //3db
+                gain1 = mapKnobValueToRange(knobVal, EQ_GAIN_MIN_VALUE, 1.5);
+                gain2 = mapKnobValueToRange(knobVal, EQ_GAIN_MIN_VALUE, 1.5);
+                *filter1.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 1000, 2.11, gain1); //3db
+                *filter2.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 10000, 0.71, gain2); //3db
                 break;
                 
             case CRIMSON:
-                *filter1.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass (getSampleRate(), 111, 0.71);
-                *filter2.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass (getSampleRate(), 2500, 0.66);
-                *filter3.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 177, 0.71, 1.67); //4db
-                *filter4.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 1777, 0.71, 1.83); //5db
+                gain1 = mapKnobValueToRange(knobVal, EQ_GAIN_MIN_VALUE, 1.67);
+                gain2 = mapKnobValueToRange(knobVal, EQ_GAIN_MIN_VALUE, 1.83);
+                cutoff3 = mapKnobValueToRange(knobVal, 10, 111);
+                cutoff4 = mapKnobValueToRange(knobVal, 20000, 2500);
+                *filter1.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 177, 0.71, gain1); //4db
+                *filter2.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (getSampleRate(), 1777, 0.71, gain2); //5db
+                *filter3.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass (getSampleRate(), cutoff3, 0.71);
+                *filter4.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass (getSampleRate(), cutoff4, 0.66);
                 break;
         }
     }
@@ -446,19 +463,26 @@ public:
         // filter params
         auto& hpf = reverbChain.template get<hpfIndex>();
         auto& lpf = reverbChain.template get<lpfIndex>();
-        hpf.state = FilterCoefs::makeFirstOrderHighPass (getSampleRate(), 300.0f);
-        lpf.state = FilterCoefs::makeFirstOrderLowPass(getSampleRate(), 3500.0f);
+        float cutoff1 = mapKnobValueToRange(knobVal, 10, 300);
+        float cutoff2 = mapKnobValueToRange(knobVal, 20000, 3500);
+        hpf.state = FilterCoefs::makeFirstOrderHighPass (getSampleRate(), cutoff1);
+        lpf.state = FilterCoefs::makeFirstOrderLowPass(getSampleRate(), cutoff2);
+        
+        // gain
+        auto& gain = reverbChain.template get<gainIndex>();
+        gain.setGainDecibels (-6); // -6dB to compensante for gain that the reverb effect adds
     }
 
 private:
     enum {
         hpfIndex,
         lpfIndex,
-        reverbIndex
+        reverbIndex,
+        gainIndex
     };
     using Filter = juce::dsp::IIR::Filter<float>;
     using FilterCoefs = juce::dsp::IIR::Coefficients<float>;
-    juce::dsp::ProcessorChain<juce::dsp::ProcessorDuplicator<Filter, FilterCoefs>, juce::dsp::ProcessorDuplicator<Filter, FilterCoefs>, juce::dsp::Reverb> reverbChain;
+    juce::dsp::ProcessorChain<juce::dsp::ProcessorDuplicator<Filter, FilterCoefs>, juce::dsp::ProcessorDuplicator<Filter, FilterCoefs>, juce::dsp::Reverb, juce::dsp::Gain<float>> reverbChain;
 };
 
 //==============================================================================

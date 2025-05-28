@@ -97,6 +97,7 @@ private:
     std::atomic<float>* modeParameter  = nullptr;
     
     float prevMode;
+    float prevKnobValue;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheKnobAudioProcessor)
