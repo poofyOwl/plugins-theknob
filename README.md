@@ -13,4 +13,4 @@ Windows or MacOS. Currently this plug-in is only available in VST3 format.
 ## Installation
 
 - Windows installer TBD
-- [MacOS installer](https://github.com/poofyOwl/plugins-theknob/installers/MacOSX/build/TheKnob-setup-v1.0.pkg)
+- [MacOS installer](https://github.com/poofyOwl/plugins-theknob/blob/main/installers/MacOSX/build/TheKnob-setup-v1.0.pkg)
