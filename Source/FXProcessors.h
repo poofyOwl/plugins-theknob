@@ -15,7 +15,7 @@
  
  There are 3 FX modes: Violet, Teal, and Crimson. They are each a unique combination (with a unique order) of a filter, some EQ, some reverb, some delay, and some distortion. Every mode's chain ends with some more EQ to add some extra unique flavour.
  
- -The Filter is the same for all modes: it's a HPF that goes from 0 Hz to 150 Hz as the knob goes from min to max.
+ -The Filter is the same for all modes: HPF that goes from 50 Hz to 150 Hz.
  -The EQ is also the same for all modes:
     -Boost at 250 Hz. Q goes from 2.0 to 1.0, Gain goes from 1.0 to 2.0 (0 dB to 6 dB).
     -Boost at 16 kHz. Q goes from 2.0 to 1.0, Gain goes from 1.0 to 2.0 (0 dB to 6 dB).
@@ -23,10 +23,10 @@
  -The Special EQ is custom to each mode.
  -The Reverb parameters are custom for each mode, except that for all modes there is first a first-order HPF at 300 Hz and a first-order LPF at 3500 Hz.
  -The Delay chain is: HPF -> LPF -> Delay -> LPF
-    -HPF goes from 200 Hz to 400 Hz
-    -LPF goes from 10 kHz to 3500 Hz
+    -HPF goes from 200 Hz to 400 Hz.
+    -LPF goes from 10 kHz to 3500 Hz.
     -The Delay parameters are custom to each mode.
-    -First-order LPF at 1000 Hz
+    -First-order LPF at 1000 Hz.
  -The Distortion parameters are custom to each mode.
  
  ---------------------------------Violet---------------------------------
