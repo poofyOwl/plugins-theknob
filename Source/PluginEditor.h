@@ -18,6 +18,53 @@ enum MODE
     CRIMSON
 };
 
+const std::array<juce::Colour, 3> COLOURS =
+{
+    juce::Colours::violet,
+    juce::Colours::teal,
+    juce::Colours::crimson
+};
+
+class MyLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    MyLookAndFeel(int mode)
+    {
+        colour = COLOURS[mode];
+        setColour (juce::Slider::thumbColourId, colour);
+    }
+    
+    juce::Slider::SliderLayout getSliderLayout (juce::Slider& slider) override
+    {
+        juce::Slider::SliderLayout layout;
+        layout.sliderBounds = slider.getLocalBounds();
+        layout.textBoxBounds = slider.getLocalBounds().withSizeKeepingCentre (100, 100);
+        return layout;
+    }
+    
+    void drawLabel (juce::Graphics& g, juce::Label& label) override
+    {
+        g.fillAll (label.findColour (juce::Label::backgroundColourId));
+
+        const juce::Font font (juce::FontOptions(33));
+
+        g.setColour (colour.withMultipliedAlpha (0.5f));
+        g.setFont (font);
+
+        auto textArea = getLabelBorderSize (label).subtractedFrom (label.getLocalBounds());
+
+        g.drawFittedText (label.getText(), textArea, juce::Justification::centred, 1, 1.0f);
+
+        g.setColour (label.findColour (juce::Label::outlineColourId).withMultipliedAlpha (0.0f));
+
+        g.drawRect (label.getLocalBounds());
+    }
+    
+private:
+    juce::Colour colour;
+
+};
+
 class PluginEditor : public juce::AudioProcessorEditor
 {
 public:
@@ -51,7 +98,7 @@ public:
         // the knob
         addAndMakeVisible (knobSlider);
         knobSlider.setSliderStyle (juce::Slider::Rotary);
-        knobSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+        knobSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 50, 50);
         knobSlider.setPopupDisplayEnabled (false, false, this);
         
         // the mode label
@@ -73,11 +120,6 @@ public:
         modeButtons.add(&button1);
         modeButtons.add(&button2);
         modeButtons.add(&button3);
-        
-        // looks and feels
-        buttonLookAndFeel[VIOLET].setColour (juce::Slider::thumbColourId, COLOURS[VIOLET]);
-        buttonLookAndFeel[TEAL].setColour (juce::Slider::thumbColourId, COLOURS[TEAL]);
-        buttonLookAndFeel[CRIMSON].setColour (juce::Slider::thumbColourId, COLOURS[CRIMSON]);
         
         knobAttachment.reset (new SliderAttachment (valueTreeState, "knob", knobSlider));
         modeAttachment = std::make_unique<RadioButtonAttachment>(*valueTreeState.getParameter("mode"), modeButtons, "mode", ModeButtons);
@@ -132,7 +174,5 @@ private:
     juce::ToggleButton button3 { "Crimson" };
     std::unique_ptr<RadioButtonAttachment> modeAttachment;
     
-    std::array<juce::LookAndFeel_V4, 3> buttonLookAndFeel;
-    
-    std::array<juce::Colour, 3> COLOURS = { juce::Colours::violet, juce::Colours::teal, juce::Colours::crimson };
+    std::array<MyLookAndFeel, 3> buttonLookAndFeel = {MyLookAndFeel(VIOLET), MyLookAndFeel(TEAL), MyLookAndFeel(CRIMSON)};
 };
