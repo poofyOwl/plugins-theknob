@@ -550,7 +550,7 @@
 				<key>USE_HFS+_COMPRESSION</key>
 				<false/>
 				<key>VERSION</key>
-				<string>1.0</string>
+				<string>1.1</string>
 			</dict>
 			<key>TYPE</key>
 			<integer>0</integer>
@@ -656,6 +656,15 @@
 					</dict>
 				</array>
 			</dict>
+		</dict>
+		<key>PROJECT_REQUIREMENTS</key>
+		<dict>
+			<key>LIST</key>
+			<array/>
+			<key>RESOURCES</key>
+			<array/>
+			<key>ROOT_VOLUME_ONLY</key>
+			<false/>
 		</dict>
 		<key>PROJECT_SETTINGS</key>
 		<dict>
@@ -837,7 +846,7 @@
 				</dict>
 			</array>
 			<key>NAME</key>
-			<string>TheKnob-setup</string>
+			<string>TheKnob-setup-v1.1</string>
 			<key>PAYLOAD_ONLY</key>
 			<false/>
 			<key>TREAT_MISSING_PRESENTATION_DOCUMENTS_AS_WARNING</key>
