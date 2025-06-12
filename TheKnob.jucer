@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="rRPcPj" name="TheKnob" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="VOU"
-              pluginFormats="buildAAX,buildVST3" pluginAAXCategory="8192">
+              pluginFormats="buildAAX,buildVST3" pluginAAXCategory="8192" version="1.1">
   <MAINGROUP id="VE9sdm" name="TheKnob">
     <GROUP id="{F990B754-C8B4-F029-7520-3709847F7438}" name="Source">
       <FILE id="u1Vbet" name="FXProcessors.h" compile="0" resource="0" file="Source/FXProcessors.h"/>
