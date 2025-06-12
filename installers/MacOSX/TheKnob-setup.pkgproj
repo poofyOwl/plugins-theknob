@@ -63,7 +63,7 @@
 													<array>
 														<dict>
 															<key>BUNDLE_CAN_DOWNGRADE</key>
-															<false/>
+															<true/>
 															<key>BUNDLE_POSTINSTALL_PATH</key>
 															<dict>
 																<key>PATH_TYPE</key>
@@ -525,6 +525,23 @@
 				<key>VERSION</key>
 				<integer>5</integer>
 			</dict>
+			<key>PACKAGE_SCRIPTS</key>
+			<dict>
+				<key>POSTINSTALL_PATH</key>
+				<dict>
+					<key>PATH_TYPE</key>
+					<integer>0</integer>
+				</dict>
+				<key>PREINSTALL_PATH</key>
+				<dict>
+					<key>PATH</key>
+					<string>/Users/vou/Software/Plugins/TheKnob/installers/MacOSX/preinstall</string>
+					<key>PATH_TYPE</key>
+					<integer>0</integer>
+				</dict>
+				<key>RESOURCES</key>
+				<array/>
+			</dict>
 			<key>PACKAGE_SETTINGS</key>
 			<dict>
 				<key>AUTHENTICATION</key>
@@ -550,7 +567,7 @@
 				<key>USE_HFS+_COMPRESSION</key>
 				<false/>
 				<key>VERSION</key>
-				<string>1.1</string>
+				<string>1.2</string>
 			</dict>
 			<key>TYPE</key>
 			<integer>0</integer>
@@ -846,7 +863,7 @@
 				</dict>
 			</array>
 			<key>NAME</key>
-			<string>TheKnob-setup-v1.1</string>
+			<string>TheKnob-setup</string>
 			<key>PAYLOAD_ONLY</key>
 			<false/>
 			<key>TREAT_MISSING_PRESENTATION_DOCUMENTS_AS_WARNING</key>
