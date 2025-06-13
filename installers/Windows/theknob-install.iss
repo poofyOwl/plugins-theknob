@@ -6,6 +6,6 @@ DisableDirPage=yes
 AlwaysShowDirOnReadyPage=yes
 Uninstallable=no
 DefaultGroupName=TheKnob
-OutputBaseFilename=TheKnob-setup
+OutputBaseFilename=TheKnobSetup
 [Files]
-Source: "..\..\Builds\VisualStudio2022\x64\Release\VST3\TheKnob.vst3\Contents\x86_64-win\TheKnob.vst3"; DestDir: "{commoncf64}\vst3"
+Source: "..\..\Builds\VisualStudio2022\x64\Release\VST3\TheKnob.vst3\Contents\x86_64-win\TheKnob.vst3"; DestDir: "{commoncf64}\vst3"; Flags: ignoreversion 
