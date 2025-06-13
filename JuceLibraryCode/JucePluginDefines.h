@@ -155,7 +155,7 @@
  #define JucePlugin_ARAFactoryID           "com.VOU.TheKnob.factory"
 #endif
 #ifndef  JucePlugin_ARADocumentArchiveID
- #define JucePlugin_ARADocumentArchiveID   "com.VOU.TheKnob.aradocumentarchive.1.0.0"
+ #define JucePlugin_ARADocumentArchiveID   "com.VOU.TheKnob.aradocumentarchive.1.1"
 #endif
 #ifndef  JucePlugin_ARACompatibleArchiveIDs
  #define JucePlugin_ARACompatibleArchiveIDs  ""
